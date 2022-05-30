@@ -10,23 +10,29 @@
 
         <ErrorSummary Except=@VisibleFields/>
 
-        <TextInput placeholder="What needs to be done?" @bind-Value="request.Title" Label=""/>
+        <div class="input-group mb-3 rounded-3">
+            <input type="text" class="form-control" placeholder="What needs to be done?" @bind="request.Title">
+            <span class="input-group-text" id="basic-addon2">
+                <DateTimeInput @bind-Value="@request.DueDate"></DateTimeInput>
+            </span>
+        </div>
+
 
         @foreach (var group in filteredTodos())
         {
-            <div class="mt-4 bg-white shadow-sm overflow-hidden rounded-md container">
+            <div class="shadow-sm rounded container mb-4">
                 <div class="row justify-content-between">
                     <p class="fw-bold col-4">@group.Key.ToShortDateString()</p>
                     <div class="col-4">
-                        <a href="#" @onclick:preventDefault class=@TabClass("border rounded-md float-end", filter == Filter.All) @onclick=@(() => filter = Filter.All)>
+                        <a href="#" @onclick:preventDefault class="border rounded-md float-end" @onclick="() => setDueDate(group.Key)">
                             <i class="bi bi-calendar2-plus"></i>
                         </a>
                     </div>
                 </div>
-                <ul role="list" class="divide-y divide-gray-200">
+                <ul role="list" class="list-group">
                     @foreach (var todo in group)
                     {
-                        <li @key="todo.Id" class="px-6 py-4">
+                        <li @key="todo.Id" class="list-group-item">
                             <div class="relative flex items-start" @onclick="_ => toggleTodo(todo.Id)">
                                 <div class="flex items-center h-6">
                                     @if (todo.Done)
@@ -58,17 +64,16 @@
             <div class="text-gray-400 leading-8 mr-4">
                 @unfinishedTodos().Count() <span class="hidden sm:inline">item(s)</span> left
             </div>
-
-            <div class="inline-flex shadow-sm rounded-md">
-                <a href="#" @onclick:preventDefault class=@TabClass("rounded-l-lg border", filter == Filter.All) @onclick=@(() => filter = Filter.All)>
-                    All
-                </a>
-                <a href="#" @onclick:preventDefault class=@TabClass("border-t border-b", filter == Filter.Unfinished) @onclick=@(() => filter = Filter.Unfinished)>
-                    Active
-                </a>
-                <a href="#" @onclick:preventDefault class=@TabClass("rounded-r-md border", filter == Filter.Finished) @onclick=@(() => filter = Filter.Finished)>
-                    Completed
-                </a>
+           
+            <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+              <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked @onclick="() => filter = Filter.All">
+              <label class="btn btn-outline-primary" for="btnradio1">All</label>
+            
+              <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" @onclick="() => filter = Filter.Unfinished">
+              <label class="btn btn-outline-primary" for="btnradio2">Active</label>
+            
+              <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" @onclick="() => filter = Filter.Finished">
+              <label class="btn btn-outline-primary" for="btnradio3">Completed</label>
             </div>
 
             <div class="leading-8 ml-4">
@@ -111,6 +116,7 @@
         Done = false,
         DueDate = DateTime.Today
     };
+
     ResponseStatus? errorStatus;
     List<IGrouping<DateTime, TodoTask>> grouped = new();
 
@@ -156,6 +162,11 @@
         var api = await ApiAsync(new DeleteTodo {Id = id});
         errorStatus = api.Error;
         await refreshTodos();
+    }
+
+    async void setDueDate(DateTime date)
+    {
+        request.DueDate = date;
     }
 
     async Task removeFinishedTodos()
