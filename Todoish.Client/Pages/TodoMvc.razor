@@ -14,9 +14,15 @@
 
         @foreach (var group in filteredTodos())
         {
-            <div class="mt-4 bg-white shadow-sm overflow-hidden rounded-md">
-
-                <p class="fw-bold">@group.Key.ToShortDateString()</p>
+            <div class="mt-4 bg-white shadow-sm overflow-hidden rounded-md container">
+                <div class="row justify-content-between">
+                    <p class="fw-bold col-4">@group.Key.ToShortDateString()</p>
+                    <div class="col-4">
+                        <a href="#" @onclick:preventDefault class=@TabClass("border rounded-md float-end", filter == Filter.All) @onclick=@(() => filter = Filter.All)>
+                            <i class="bi bi-calendar2-plus"></i>
+                        </a>
+                    </div>
+                </div>
                 <ul role="list" class="divide-y divide-gray-200">
                     @foreach (var todo in group)
                     {
