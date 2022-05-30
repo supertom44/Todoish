@@ -33,3 +33,13 @@ public class UpdateTask : IUpdateDb<TodoTask>, IReturnVoid
     public bool Done { get; set; }
     public DateTime DueDate { get; set; }
 }
+
+[Tag("task")]
+[Route("/task", "POST")]
+public class CreateTask : ICreateDb<TodoTask>, IReturn<TodoTask>
+{
+    [ValidateNotEmpty]
+    public string Title { get; set; }
+    public bool Done { get; set; }
+    public DateTime DueDate { get; set; }
+}

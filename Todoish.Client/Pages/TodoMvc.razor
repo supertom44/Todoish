@@ -10,7 +10,7 @@
 
         <ErrorSummary Except=@VisibleFields/>
 
-        <TextInput placeholder="What needs to be done?" @bind-Value="request.Text" Label=""/>
+        <TextInput placeholder="What needs to be done?" @bind-Value="request.Title" Label=""/>
 
         @foreach (var group in filteredTodos())
         {
@@ -100,7 +100,11 @@
     List<TodoTask> todos = new();
     Filter filter = Filter.All;
 
-    CreateTodo request = new();
+    CreateTask request = new()
+    {
+        Done = false,
+        DueDate = DateTime.Today
+    };
     ResponseStatus? errorStatus;
     List<IGrouping<DateTime, TodoTask>> grouped = new();
 
@@ -131,10 +135,10 @@
     async Task addTodo()
     {
         errorStatus = null;
-        todos.Add(new TodoTask {Title = request.Text, Done = false});
+        todos.Add(new TodoTask {Title = request.Title, Done = false, DueDate = DateTime.Today});
         var api = await ApiAsync(request);
         if (api.Succeeded)
-            request.Text = "";
+            request.Title = "";
         else
             errorStatus = api.Error;
         await refreshTodos();
