@@ -45,7 +45,7 @@
                                     }
                                 </div>
                                 <div class="ml-3 flex-grow">
-                                    <label class=@(todo.Done ? "line-through" : "")>@todo.Title</label>
+                                    <label style=@(todo.Done ? "text-decoration: line-through;" : "")>@todo.Title</label>
                                 </div>
                                 <div>
                                     @if (todo.Done)
