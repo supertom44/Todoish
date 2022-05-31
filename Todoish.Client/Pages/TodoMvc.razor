@@ -204,7 +204,7 @@
         if (value is not "")
         {
             request.Title = value;
-            if (value.Contains("tom", StringComparison.OrdinalIgnoreCase) || value.Contains("tomorrow", StringComparison.OrdinalIgnoreCase))
+            if (value.Contains(" tom", StringComparison.OrdinalIgnoreCase) || value.Contains(" tomorrow", StringComparison.OrdinalIgnoreCase))
             {
                 request.DueDate = DateTime.Today + TimeSpan.FromDays(1);
             }
