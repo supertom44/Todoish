@@ -162,8 +162,8 @@
     private string SanitiseTitle()
     {
         return request.Title
-            .Replace("tom", "", StringComparison.OrdinalIgnoreCase)
-            .Replace("tomorrow","",StringComparison.OrdinalIgnoreCase);
+            .Replace(" tom", "", StringComparison.OrdinalIgnoreCase)
+            .Replace(" tomorrow","",StringComparison.OrdinalIgnoreCase);
     }
 
     async Task removeTodo(long id)
