@@ -8,10 +8,10 @@
             <span class="ml-1 sm:ml-4 text-xl sm:text-3xl text-gray-700">Todos Application</span>
         </div>
 
-        <ErrorSummary Except=@VisibleFields/>
+        <ErrorSummary Except=@VisibleFields />
 
         <div class="input-group mb-3 rounded-3">
-            <input type="text" class="form-control" placeholder="What needs to be done?" @bind="request.Title">
+            <input type="text" class="form-control" placeholder="What needs to be done?" value="@request.Title" @oninput="ProcessText">
             <span class="input-group-text" id="basic-addon2">
                 <DateTimeInput @bind-Value="@request.DueDate"></DateTimeInput>
             </span>
@@ -64,16 +64,16 @@
             <div class="text-gray-400 leading-8 mr-4">
                 @unfinishedTodos().Count() <span class="hidden sm:inline">item(s)</span> left
             </div>
-           
+
             <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-              <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked @onclick="() => filter = Filter.All">
-              <label class="btn btn-outline-primary" for="btnradio1">All</label>
-            
-              <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" @onclick="() => filter = Filter.Unfinished">
-              <label class="btn btn-outline-primary" for="btnradio2">Active</label>
-            
-              <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" @onclick="() => filter = Filter.Finished">
-              <label class="btn btn-outline-primary" for="btnradio3">Completed</label>
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked @onclick="() => filter = Filter.All">
+                <label class="btn btn-outline-primary" for="btnradio1">All</label>
+
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" @onclick="() => filter = Filter.Unfinished">
+                <label class="btn btn-outline-primary" for="btnradio2">Active</label>
+
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" @onclick="() => filter = Filter.Finished">
+                <label class="btn btn-outline-primary" for="btnradio3">Completed</label>
             </div>
 
             <div class="leading-8 ml-4">
@@ -93,7 +93,8 @@
 </form>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-@code {
+@code 
+{
 
     enum Filter
     {
@@ -147,13 +148,22 @@
     async Task addTodo()
     {
         errorStatus = null;
-        todos.Add(new TodoTask {Title = request.Title, Done = false, DueDate = DateTime.Today});
+        var todoTask = new TodoTask {Title = SanitiseTitle(), Done = false, DueDate = DateTime.Today};
+        todos.Add(todoTask);
+        request.Title = todoTask.Title;
         var api = await ApiAsync(request);
         if (api.Succeeded)
             request.Title = "";
         else
             errorStatus = api.Error;
         await refreshTodos();
+    }
+
+    private string SanitiseTitle()
+    {
+        return request.Title
+            .Replace("tom", "", StringComparison.OrdinalIgnoreCase)
+            .Replace("tomorrow","",StringComparison.OrdinalIgnoreCase);
     }
 
     async Task removeTodo(long id)
@@ -187,5 +197,19 @@
         errorStatus = api.Error;
         await refreshTodos();
     }
+
+    private void ProcessText(ChangeEventArgs e)
+    {
+        var value = (string)e.Value!;
+        if (value is not "")
+        {
+            request.Title = value;
+            if (value.Contains("tom", StringComparison.OrdinalIgnoreCase) || value.Contains("tomorrow", StringComparison.OrdinalIgnoreCase))
+            {
+                request.DueDate = DateTime.Today + TimeSpan.FromDays(1);
+            }
+        }
     }
+}
+
 
