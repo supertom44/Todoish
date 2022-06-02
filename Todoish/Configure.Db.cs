@@ -1,8 +1,6 @@
 using Todoish.ServiceModel;
-using ServiceStack;
 using ServiceStack.Data;
 using ServiceStack.OrmLite;
-using System.Data;
 
 [assembly: HostingStartup(typeof(Todoish.ConfigureDb))]
 
@@ -33,15 +31,6 @@ namespace Todoish
                     });
                 }
 
-                if (db.CreateTableIfNotExists<Todo>())
-                {
-                    db.Insert<Todo>(new Todo[]
-                    {
-                        new() {Id = 1, Text = "Learn"},
-                        new() {Id = 2, Text = "Blazor", IsFinished = true},
-                        new() {Id = 3, Text = "WASM!"},
-                    });
-                }
             });
     }
 }
