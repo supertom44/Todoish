@@ -8,57 +8,61 @@
             <span class="ml-1 sm:ml-4 text-xl sm:text-3xl text-gray-700">Todos Application</span>
         </div>
 
-        <ErrorSummary Except=@VisibleFields />
+        <ErrorSummary Except=@VisibleFields></ErrorSummary>
 
         <div class="input-group mb-3 rounded-3">
-            <input type="text" class="form-control" placeholder="What needs to be done?" value="@request.Title" @oninput=" async (e) => await ProcessText(e)">
+            <input type="text" class="form-control" placeholder="What needs to be done?" value="@request.Title" @oninput="async (e) => await ProcessText(e)">
             <span class="input-group-text" id="basic-addon2">
                 <DateTimeInput @bind-Value="@request.DueDate"></DateTimeInput>
             </span>
         </div>
-
-
-        @foreach (var group in filteredTodos())
-        {
-            <div class="@DayContainerClass(group.Key)">
-                <div class="row justify-content-between">
-                    <p class="fw-bold col-4">@group.Key.ToShortDateString()</p>
-                    <div class="col-4">
-                        <a href="#" @onclick:preventDefault class="border rounded-md float-end" @onclick="() => setDueDate(group.Key)">
-                            <i class="bi bi-calendar2-plus"></i>
-                        </a>
+        <div class="accordion accordion-flush">
+            @foreach (var group in filteredTodos())
+            {
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="@DayContainerClass(group.Key)" type="button" data-bs-toggle="collapse" data-bs-target="#@group.Key.ToString("MMMMyyyydd")">
+                            @group.Key.ToShortDateString()
+                        </button>
+                    </h2>
+                    <div id="@group.Key.ToString("MMMMyyyydd")" class="@AccordionDayClass(group.Key)">
+                        <div class="accordion-body">
+                            <ul role="list" class="list-group">
+                                @foreach (var todo in group)
+                                {
+                                    <li @key="todo.Id" class="list-group-item">
+                                        <div class="relative flex items-start" @onclick="_ => toggleTodo(todo.Id)">
+                                            <div class="flex items-center h-6">
+                                                @if (todo.Done)
+                                                {
+                                                    <span class="material-icons text-green-600 h-5 w-5">check_circle</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="material-icons h-5 w-5">radio_button_unchecked</span>
+                                                }
+                                            </div>
+                                            <div class="ml-3 flex-grow">
+                                                <label style=@(todo.Done ? "text-decoration: line-through;" : "")>@todo.Title</label>
+                                            </div>
+                                            <div>
+                                                @if (todo.Done)
+                                                {
+                                                    <span class="material-icons h-5 w-5" @onclick="_ => removeTodo(todo.Id)">delete_outline</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
                     </div>
+
+
                 </div>
-                <ul role="list" class="list-group">
-                    @foreach (var todo in group)
-                    {
-                        <li @key="todo.Id" class="list-group-item">
-                            <div class="relative flex items-start" @onclick="_ => toggleTodo(todo.Id)">
-                                <div class="flex items-center h-6">
-                                    @if (todo.Done)
-                                    {
-                                        <span class="material-icons text-green-600 h-5 w-5">check_circle</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="material-icons h-5 w-5">radio_button_unchecked</span>
-                                    }
-                                </div>
-                                <div class="ml-3 flex-grow">
-                                    <label style=@(todo.Done ? "text-decoration: line-through;" : "")>@todo.Title</label>
-                                </div>
-                                <div>
-                                    @if (todo.Done)
-                                    {
-                                        <span class="material-icons h-5 w-5" @onclick="_ => removeTodo(todo.Id)">delete_outline</span>
-                                    }
-                                </div>
-                            </div>
-                        </li>
-                    }
-                </ul>
-            </div>
-        }
+            }
+        </div>
+
 
         <div class="mt-4 flex justify-between">
             <div class="text-gray-400 leading-8 mr-4">
@@ -93,7 +97,7 @@
 </form>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-@code 
+@code
 {
 
     enum Filter
@@ -108,8 +112,13 @@
 
     string DayContainerClass(DateTime date)
     {
-        return ClassNames("shadow-sm rounded container mb-4",
-            date.Date == DateTime.Today ? "bg-primary" : "");
+        return ClassNames("accordion-button",
+            date.Date == DateTime.Today ? "bg-primary text-white" : "");
+    }
+
+    string AccordionDayClass(DateTime date)
+    {
+        return ClassNames("accordion-collapse collapse", date.Date == DateTime.Today ? "show" : "");
     }
 
     List<TodoTask> todos = new();
@@ -165,10 +174,10 @@
 
     async Task removeTodo(long id)
     {
-        // todos.RemoveAll(x => x.Id == id);
-        // var api = await ApiAsync(new Delete {Id = id});
-        // errorStatus = api.Error;
-        // await refreshTodos();
+    // todos.RemoveAll(x => x.Id == id);
+    // var api = await ApiAsync(new Delete {Id = id});
+    // errorStatus = api.Error;
+    // await refreshTodos();
     }
 
     async void setDueDate(DateTime date)
@@ -198,11 +207,11 @@
 
     private async Task ProcessText(ChangeEventArgs e)
     {
-        var value = (string)e.Value!;
+        var value = (string) e.Value!;
         if (value is not "")
-        {   
+        {
             request.Title = value;
-            var api = await ApiAsync(new DueDate{Title = request.Title});
+            var api = await ApiAsync(new DueDate {Title = request.Title});
             if (api.Succeeded && api.Response!.Result.HasValue)
             {
                 request.DueDate = api.Response!.Result.Value;
@@ -211,10 +220,10 @@
             {
                 request.DueDate = OriginalDueDate;
             }
-            
+
             StateHasChanged();
         }
     }
-}
+    }
 
 
