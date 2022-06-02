@@ -11,7 +11,7 @@
         <ErrorSummary Except=@VisibleFields />
 
         <div class="input-group mb-3 rounded-3">
-            <input type="text" class="form-control" placeholder="What needs to be done?" value="@request.Title" @oninput="ProcessText">
+            <input type="text" class="form-control" placeholder="What needs to be done?" value="@request.Title" @oninput=" async (e) => await ProcessText(e)">
             <span class="input-group-text" id="basic-addon2">
                 <DateTimeInput @bind-Value="@request.DueDate"></DateTimeInput>
             </span>
@@ -120,6 +120,7 @@
 
     ResponseStatus? errorStatus;
     List<IGrouping<DateTime, TodoTask>> grouped = new();
+    private DateTime OriginalDueDate = DateTime.Today;
 
     IEnumerable<IGrouping<DateTime, TodoTask>> filteredTodos() => filter switch
     {
@@ -148,7 +149,7 @@
     async Task addTodo()
     {
         errorStatus = null;
-        var todoTask = new TodoTask {Title = SanitiseTitle(), Done = false, DueDate = DateTime.Today};
+        var todoTask = new TodoTask {Title = request.Title, Done = false, DueDate = DateTime.Today};
         todos.Add(todoTask);
         request.Title = todoTask.Title;
         var api = await ApiAsync(request);
@@ -157,13 +158,6 @@
         else
             errorStatus = api.Error;
         await refreshTodos();
-    }
-
-    private string SanitiseTitle()
-    {
-        return request.Title
-            .Replace(" tom", "", StringComparison.OrdinalIgnoreCase)
-            .Replace(" tomorrow","",StringComparison.OrdinalIgnoreCase);
     }
 
     async Task removeTodo(long id)
@@ -177,6 +171,7 @@
     async void setDueDate(DateTime date)
     {
         request.DueDate = date;
+        OriginalDueDate = date;
     }
 
     async Task removeFinishedTodos()
@@ -198,16 +193,23 @@
         await refreshTodos();
     }
 
-    private void ProcessText(ChangeEventArgs e)
+    private async Task ProcessText(ChangeEventArgs e)
     {
         var value = (string)e.Value!;
         if (value is not "")
-        {
+        {   
             request.Title = value;
-            if (value.Contains(" tom", StringComparison.OrdinalIgnoreCase) || value.Contains(" tomorrow", StringComparison.OrdinalIgnoreCase))
+            var api = await ApiAsync(new DueDate{Title = request.Title});
+            if (api.Succeeded && api.Response!.Result.HasValue)
             {
-                request.DueDate = DateTime.Today + TimeSpan.FromDays(1);
+                request.DueDate = api.Response!.Result.Value;
             }
+            else
+            {
+                request.DueDate = OriginalDueDate;
+            }
+            
+            StateHasChanged();
         }
     }
 }
