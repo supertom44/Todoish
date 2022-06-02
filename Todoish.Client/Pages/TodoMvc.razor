@@ -20,7 +20,7 @@
 
         @foreach (var group in filteredTodos())
         {
-            <div class="shadow-sm rounded container mb-4">
+            <div class="@DayContainerClass(group.Key)">
                 <div class="row justify-content-between">
                     <p class="fw-bold col-4">@group.Key.ToShortDateString()</p>
                     <div class="col-4">
@@ -105,9 +105,12 @@
 
     static string[] VisibleFields = new[] {nameof(CreateTask.Title)};
 
-    string TabClass(string @class, bool isActive) =>
-        ClassNames("border-gray-200 text-sm font-medium px-4 py-2 hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700",
-            (isActive ? "text-blue-700 dark:bg-blue-600" : "text-gray-900 hover:text-blue-700 dark:bg-gray-700"), @class);
+
+    string DayContainerClass(DateTime date)
+    {
+        return ClassNames("shadow-sm rounded container mb-4",
+            date.Date == DateTime.Today ? "bg-primary" : "");
+    }
 
     List<TodoTask> todos = new();
     Filter filter = Filter.All;
@@ -124,9 +127,9 @@
 
     IEnumerable<IGrouping<DateTime, TodoTask>> filteredTodos() => filter switch
     {
-        Filter.Finished => finishedTodos().GroupBy(x => x.DueDate),
-        Filter.Unfinished => unfinishedTodos().GroupBy(x => x.DueDate),
-        _ => todos.GroupBy(x => x.DueDate)
+        Filter.Finished => finishedTodos().GroupBy(x => x.DueDate).OrderBy(x => x.Key),
+        Filter.Unfinished => unfinishedTodos().GroupBy(x => x.DueDate).OrderBy(x => x.Key),
+        _ => todos.GroupBy(x => x.DueDate).OrderBy(x => x.Key)
         };
 
     IEnumerable<TodoTask> finishedTodos() => todos.Where(x => x.Done);
